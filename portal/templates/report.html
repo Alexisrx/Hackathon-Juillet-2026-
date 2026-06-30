@@ -17,6 +17,22 @@
 </section>
 
 <section class="panel">
+  <h2>Repartition des couts par groupe</h2>
+  {% if group_totals %}
+  <table class="data-table">
+    <thead><tr><th>Groupe</th><th>VMs actives</th><th>Cout estime</th></tr></thead>
+    <tbody>
+    {% for g, t in group_totals.items() %}
+      <tr><td>{{ g }}</td><td>{{ t.count }}</td><td>{{ t.cost }} CHF</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p class="empty">Aucune VM active pour l'instant.</p>
+  {% endif %}
+</section>
+
+<section class="panel">
   <h2>Journal des destructions automatiques</h2>
   {% if destroyed %}
   <pre class="log-block">{% for line in destroyed %}{{ line }}

@@ -207,6 +207,15 @@ def report():
             if "destruction VM expiree" in line
         ]
 
+    group_totals = {}
+    for vm in vms:
+        g = vm.get("group", "?")
+        group_totals.setdefault(g, {"count": 0, "cost": 0.0})
+        group_totals[g]["count"] += 1
+        group_totals[g]["cost"] += vm["estimated_cost"]
+    for g in group_totals:
+        group_totals[g]["cost"] = round(group_totals[g]["cost"], 3)
+
     stats = {
         "total_demandes": len(all_reqs),
         "approuvees": len([r for r in all_reqs if r.get("status") in ("approved", "provisioned")]),
@@ -222,6 +231,7 @@ def report():
         stats=stats,
         vms=vms,
         destroyed=destroyed_lines,
+        group_totals=group_totals,
         generated_at=datetime.datetime.now().strftime("%Y-%m-%d %H:%M"),
     )
 
