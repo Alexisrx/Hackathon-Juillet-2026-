@@ -1,0 +1,10 @@
+{
+  "id": "req-001",
+  "owner": "alice",
+  "group": "groupe-a",
+  "template": "ubuntu-base",
+  "start_date": "2026-06-30",
+  "end_date": "2026-07-10",
+  "ssh_public_key": "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAICgAvzBqb8xZZEcSocA0P3z32CB3C8l2doVKs3CCppWV alexis@DESKTOP-ALEX",
+  "status": "provisioned"
+}

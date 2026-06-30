@@ -1,0 +1,25 @@
+# A copier dans /etc/systemd/system/ puis :
+#   systemctl daemon-reload
+#   systemctl enable --now hackathon-destroy.timer
+#
+# Fichier : hackathon-destroy.service
+[Unit]
+Description=Destruction automatique des VMs expirees (hackathon)
+
+[Service]
+Type=oneshot
+WorkingDirectory=/opt/hackathon-platform/scripts
+ExecStart=/opt/hackathon-platform/scripts/destroy_expired.sh
+
+# ---
+# Fichier : hackathon-destroy.timer
+[Unit]
+Description=Execute hackathon-destroy.service toutes les 10 minutes
+
+[Timer]
+OnBootSec=2min
+OnUnitActiveSec=10min
+Unit=hackathon-destroy.service
+
+[Install]
+WantedBy=timers.target
