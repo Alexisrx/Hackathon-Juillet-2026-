@@ -16,7 +16,11 @@
         <td class="mono">{{ vm.id }}</td>
         <td>{{ vm.owner }}</td>
         <td>{{ vm.group }}</td>
-        <td class="mono">{{ vm.end_date }}</td>
+        <td class="mono">
+          {{ vm.end_date }}
+          {% if vm.expiry_flag == 'expire-today' %}<span class="status-pill status-refused">expire aujourd'hui</span>{% endif %}
+          {% if vm.expiry_flag == 'expire-soon' %}<span class="status-pill status-pending">expire demain</span>{% endif %}
+        </td>
         <td>{{ vm.hours_active }} h</td>
         <td>{{ vm.estimated_cost }} CHF</td>
       </tr>

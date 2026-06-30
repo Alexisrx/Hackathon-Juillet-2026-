@@ -171,6 +171,20 @@ def get_vm_status():
         rate = CATALOG.get(vm.get("template"), {}).get("cost_per_hour", 0.03)
         vm["hours_active"] = round(hours_active, 2)
         vm["estimated_cost"] = round(hours_active * rate, 3)
+
+        try:
+            end = datetime.date.fromisoformat(vm["end_date"])
+            days_left = (end - datetime.date.today()).days
+        except (ValueError, KeyError):
+            days_left = None
+        vm["days_left"] = days_left
+        if days_left is not None and days_left <= 0:
+            vm["expiry_flag"] = "expire-today"
+        elif days_left is not None and days_left == 1:
+            vm["expiry_flag"] = "expire-soon"
+        else:
+            vm["expiry_flag"] = None
+
         enriched.append(vm)
     return enriched
 
