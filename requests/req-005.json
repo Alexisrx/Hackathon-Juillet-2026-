@@ -1,0 +1,10 @@
+{
+  "id": "req-005",
+  "owner": "Alew",
+  "group": "groupe1",
+  "template": "ubuntu-dev",
+  "start_date": "2026-06-30",
+  "end_date": "2026-06-30",
+  "ssh_public_key": "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAICgAvzBqb8xZZEcSocA0P3z32CB3C8l2doVKs3CCppWV alexis@DESKTOP-ALEX",
+  "status": "provisioned"
+}

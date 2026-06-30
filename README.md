@@ -64,23 +64,54 @@ crontab -e
 Une alternative systemd (`unit` + `timer`) est fournie en exemple dans
 `scripts/hackathon-destroy.timer.example`.
 
+## Portail web (catalogue, validation, dashboard, rapport)
+
+Un portail Flask (`portal/`) couvre les MUST côté Développeur (catalogue de
+3 templates, formulaire de demande, workflow de validation) et côté Data
+(dashboard up/down, estimation de coûts, mini-rapport), regroupés dans une
+seule petite app pour rester simple à lancer en 3 jours. Peut être scindé
+en plusieurs services si l'équipe se répartit dessus plus tard — le contrat
+avec l'infra (le dossier `requests/`) reste identique dans tous les cas.
+
+```bash
+cd portal
+./run.sh
+# ouvrir http://localhost:5000
+```
+
+Pages : `/` (catalogue + demande), `/validate` (file de validation),
+`/dashboard` (statut + coûts), `/report` (mini-rapport).
+
+Le portail écrit un fichier JSON dans `requests/` avec `status: "pending"`,
+puis `"approved"` ou `"refused"` une fois validé. Il ne connaît rien à
+Terraform/Docker : c'est `scripts/watch_requests.sh` (à lancer en parallèle,
+voir plus haut) qui détecte les demandes approuvées et déclenche le
+provisioning automatiquement.
+
+Pour la démo, lancer dans des terminaux séparés :
+```bash
+./scripts/watch_requests.sh   # terminal 1 : provisionne automatiquement
+cd portal && ./run.sh          # terminal 2 : portail web
+```
+
 ## Intégration avec l'équipe Développeur
 
-Le contrat d'interface est volontairement minimal : le portail web écrit un
-fichier JSON dans `requests/` avec `status: "approved"` une fois la demande
-validée (voir le format en commentaire dans `scripts/provision.sh`). Le
-portail peut soit appeler `provision.sh` directement (exec ou webhook),
-soit laisser un job qui surveille `requests/*.json` et les traite au fil de
-l'eau. Aucune dépendance inverse : ce module n'a pas besoin de connaître
-l'implémentation du portail.
+Le contrat d'interface est volontairement minimal : un fichier JSON dans
+`requests/` avec `status: "approved"` une fois la demande validée (voir le
+format en commentaire dans `scripts/provision.sh`). Le portail fourni dans
+`portal/` l'implémente déjà ; si l'équipe Dev préfère reprendre la main,
+elle peut remplacer `portal/` par sa propre implémentation tant qu'elle
+écrit ce même format dans `requests/`.
 
 ## Intégration avec l'équipe Data
 
 `scripts/status.sh` retourne un tableau JSON `[{id, owner, group, template,
 end_date, ssh_port, status: "up"|"down"|"unknown"}, ...]`, directement
-exploitable pour le dashboard et l'estimation de coûts/usage.
+exploitable pour un dashboard et l'estimation de coûts/usage.
 `logs/destructions.log` donne un historique simple pour le mini-rapport de
-fin de hackathon.
+fin de hackathon. Une implémentation de référence des deux (dashboard +
+rapport) est déjà fournie dans `portal/` (`/dashboard`, `/report`) ; à
+adapter ou enrichir si l'équipe Data veut une présentation différente.
 
 ## Limites connues (MVP 3 jours)
 

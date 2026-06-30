@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}Validation{% endblock %}
+{% block content %}
+<section class="hero hero-compact">
+  <h1>File de validation</h1>
+  <p class="hero-sub">{{ pending|length }} demande(s) en attente.</p>
+</section>
+
+<section class="panel">
+  {% if pending %}
+  <table class="data-table">
+    <thead><tr><th>ID</th><th>Proprietaire</th><th>Groupe</th><th>Template</th><th>Debut</th><th>Fin</th><th>Action</th></tr></thead>
+    <tbody>
+    {% for r in pending %}
+      <tr>
+        <td class="mono">{{ r.id }}</td>
+        <td>{{ r.owner }}</td>
+        <td>{{ r.group }}</td>
+        <td>{{ catalog.get(r.template, {}).get('label', r.template) }}</td>
+        <td class="mono">{{ r.start_date }}</td>
+        <td class="mono">{{ r.end_date }}</td>
+        <td class="actions">
+          <form method="POST" action="{{ url_for('validate_action', vm_id=r.id, action='approve') }}">
+            <button class="btn-approve" type="submit">approuver</button>
+          </form>
+          <form method="POST" action="{{ url_for('validate_action', vm_id=r.id, action='refuse') }}">
+            <button class="btn-refuse" type="submit">refuser</button>
+          </form>
+        </td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p class="empty">File vide — rien a valider pour l'instant.</p>
+  {% endif %}
+</section>
+{% endblock %}

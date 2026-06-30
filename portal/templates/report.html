@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}Rapport{% endblock %}
+{% block content %}
+<section class="hero hero-compact">
+  <h1>Mini-rapport</h1>
+  <p class="hero-sub">Genere le {{ generated_at }}</p>
+</section>
+
+<section class="panel stats-grid">
+  <div class="stat"><span class="stat-value">{{ stats.total_demandes }}</span><span class="stat-label">demandes totales</span></div>
+  <div class="stat"><span class="stat-value">{{ stats.approuvees }}</span><span class="stat-label">approuvees</span></div>
+  <div class="stat"><span class="stat-value">{{ stats.refusees }}</span><span class="stat-label">refusees</span></div>
+  <div class="stat"><span class="stat-value">{{ stats.en_attente }}</span><span class="stat-label">en attente</span></div>
+  <div class="stat"><span class="stat-value">{{ stats.vms_actives }}</span><span class="stat-label">VMs actives</span></div>
+  <div class="stat"><span class="stat-value">{{ stats.vms_detruites }}</span><span class="stat-label">VMs detruites (auto)</span></div>
+  <div class="stat stat-accent"><span class="stat-value">{{ stats.cout_total_estime }} CHF</span><span class="stat-label">cout estime cumule</span></div>
+</section>
+
+<section class="panel">
+  <h2>Journal des destructions automatiques</h2>
+  {% if destroyed %}
+  <pre class="log-block">{% for line in destroyed %}{{ line }}
+{% endfor %}</pre>
+  {% else %}
+  <p class="empty">Aucune destruction enregistree pour l'instant.</p>
+  {% endif %}
+</section>
+{% endblock %}

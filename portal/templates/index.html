@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block title %}Catalogue{% endblock %}
+{% block content %}
+<section class="hero">
+  <h1>Demander une VM</h1>
+  <p class="hero-sub">Choisissez un template, fixez une fenetre de vie precise. Aucune VM n'est creee sans date de fin.</p>
+</section>
+
+<section class="catalog-grid">
+  {% for key, tpl in catalog.items() %}
+  <label class="catalog-card">
+    <input type="radio" name="template" value="{{ key }}" form="request-form" {% if loop.first %}checked{% endif %}>
+    <span class="catalog-card-label">{{ tpl.label }}</span>
+    <span class="catalog-card-desc">{{ tpl.desc }}</span>
+    <span class="catalog-card-rate">~{{ tpl.cost_per_hour }} CHF/h estime</span>
+  </label>
+  {% endfor %}
+</section>
+
+<section class="panel">
+  <h2>Formulaire de demande</h2>
+  <form id="request-form" method="POST" class="form-grid">
+    <label>Nom / pseudo
+      <input type="text" name="owner" required placeholder="alice">
+    </label>
+    <label>Groupe
+      <input type="text" name="group" required placeholder="groupe-a">
+    </label>
+    <label>Date de debut
+      <input type="date" name="start_date" required value="{{ today }}">
+    </label>
+    <label>Date de fin <span class="required-mark">obligatoire</span>
+      <input type="date" name="end_date" required>
+    </label>
+    <label class="span-2">Cle publique SSH
+      <textarea name="ssh_public_key" required rows="3" placeholder="ssh-ed25519 AAAA..."></textarea>
+    </label>
+    <button type="submit" class="btn-primary span-2">Envoyer la demande</button>
+  </form>
+</section>
+
+<section class="panel">
+  <h2>Demandes recentes</h2>
+  <table class="data-table">
+    <thead><tr><th>ID</th><th>Proprietaire</th><th>Groupe</th><th>Template</th><th>Fin</th><th>Statut</th></tr></thead>
+    <tbody>
+    {% for r in requests|reverse %}
+      <tr>
+        <td class="mono">{{ r.id }}</td>
+        <td>{{ r.owner }}</td>
+        <td>{{ r.group }}</td>
+        <td>{{ catalog.get(r.template, {}).get('label', r.template) }}</td>
+        <td class="mono">{{ r.end_date }}</td>
+        <td><span class="status-pill status-{{ r.status }}">{{ r.status }}</span></td>
+      </tr>
+    {% else %}
+      <tr><td colspan="6" class="empty">Aucune demande pour l'instant.</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</section>
+{% endblock %}

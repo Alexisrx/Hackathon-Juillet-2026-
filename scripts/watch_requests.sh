@@ -1,4 +1,13 @@
 #!/usr/bin/env bash
+#
+# watch_requests.sh — surveille requests/*.json et provisionne automatiquement
+# toute nouvelle demande approuvee. A lancer dans un terminal dedie (ou en
+# arriere-plan) pendant le hackathon : le portail web (equipe Developpeur)
+# n'a alors qu'a ecrire un fichier JSON avec status="approved", sans avoir
+# a invoquer provision.sh ni a connaitre Terraform/OpenTofu.
+#
+# Usage : ./watch_requests.sh [intervalle_secondes]   (defaut: 5)
+#
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"

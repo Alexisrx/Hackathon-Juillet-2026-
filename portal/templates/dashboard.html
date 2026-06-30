@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+<section class="hero hero-compact">
+  <h1>Dashboard</h1>
+  <p class="hero-sub">{{ vms|length }} VM(s) active(s) — cout estime cumule : <strong>{{ total_cost }} CHF</strong></p>
+</section>
+
+<section class="panel">
+  <table class="data-table">
+    <thead><tr><th>Statut</th><th>ID</th><th>Proprietaire</th><th>Groupe</th><th>Fin</th><th>Heures actives</th><th>Cout estime</th></tr></thead>
+    <tbody>
+    {% for vm in vms %}
+      <tr>
+        <td><span class="pulse pulse-{{ vm.status }}"></span>{{ vm.status }}</td>
+        <td class="mono">{{ vm.id }}</td>
+        <td>{{ vm.owner }}</td>
+        <td>{{ vm.group }}</td>
+        <td class="mono">{{ vm.end_date }}</td>
+        <td>{{ vm.hours_active }} h</td>
+        <td>{{ vm.estimated_cost }} CHF</td>
+      </tr>
+    {% else %}
+      <tr><td colspan="7" class="empty">Aucune VM active.</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</section>
+{% endblock %}
