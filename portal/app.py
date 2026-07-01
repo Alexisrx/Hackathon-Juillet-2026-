@@ -141,13 +141,12 @@ def validate_action(vm_id, action):
 
 
 def get_vm_status():
-    """Interroge scripts/status.sh (source : etat Terraform + docker ps)
-    et enrichit chaque VM avec une estimation simple de cout, basee sur le
-    temps ecoule depuis la creation du conteneur."""
+    """Interroge scripts/status.sh (source : etat OpenTofu + OpenStack CLI)
+    et enrichit chaque VM avec une estimation simple de cout."""
     try:
         out = subprocess.run(
             [str(SCRIPTS_DIR / "status.sh")],
-            capture_output=True, text=True, timeout=15,
+            capture_output=True, text=True, timeout=30,
         )
         vms = json.loads(out.stdout) if out.stdout.strip() else []
     except (subprocess.SubprocessError, json.JSONDecodeError, FileNotFoundError):
@@ -155,12 +154,12 @@ def get_vm_status():
 
     enriched = []
     for vm in vms:
-        container = f"vm-{vm['id']}"
+        server = f"vm-{vm['id']}"
         hours_active = 0.0
         try:
             ts = subprocess.run(
-                ["docker", "inspect", "-f", "{{.Created}}", container],
-                capture_output=True, text=True, timeout=5,
+                ["openstack", "server", "show", server, "-f", "value", "-c", "created"],
+                capture_output=True, text=True, timeout=10,
             ).stdout.strip()
             created = datetime.datetime.fromisoformat(ts.replace("Z", "+00:00"))
             now = datetime.datetime.now(datetime.timezone.utc)
@@ -172,6 +171,8 @@ def get_vm_status():
         vm["hours_active"] = round(hours_active, 2)
         vm["estimated_cost"] = round(hours_active * rate, 3)
 
+        # Bonus "notification avant echeance" : signale visuellement les VMs
+        # proches de leur date de fin, sans systeme d'envoi d'email/SMS.
         try:
             end = datetime.date.fromisoformat(vm["end_date"])
             days_left = (end - datetime.date.today()).days
