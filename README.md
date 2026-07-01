@@ -1,122 +1,253 @@
-# Hackathon Juillet 2026 — Module Système & Réseau
+# Hackathon Juillet 2026 — Plateforme Cloud Self-Service
 
-Provisioning automatisé de VMs (simulées via Docker), destruction
-automatique à échéance, accès SSH sécurisé et isolation réseau entre
-groupes. Voir [`docs/ADR-001-infrastructure.md`](docs/ADR-001-infrastructure.md)
-pour le détail des choix.
+**Geneva Institute of Technology × Satom IT & Learning Solutions**  
+Infrastructure as Code · Infomaniak Public Cloud · 3 jours
 
-## Prérequis
+---
 
-- Docker
-- [OpenTofu](https://opentofu.org/docs/intro/install/) (`tofu`)
-- `jq`
+## Vue d'ensemble
 
-## Démarrage rapide
+Plateforme self-service complète pour la gestion du cycle de vie de VMs cloud destinées aux étudiants et formateurs. Un étudiant soumet une demande via le portail web, un validateur l'approuve, la VM est provisionnée automatiquement sur Infomaniak Public Cloud et détruite à son échéance — sans aucune intervention manuelle.
+
+```
+Étudiant → Portail web → Validation → Provisioning auto → VM Ubuntu 22.04 → Destruction auto
+```
+
+---
+
+## Accès rapide
+
+| Ressource | URL / Commande |
+|-----------|---------------|
+| Portail web (jury) | http://84.234.27.147 |
+| Dépôt Git | https://github.com/Alexisrx/Hackathon-Juillet-2026- |
+| Architecture | docs/ADR-001-infrastructure.md |
+| Scénario démo | docs/DEMO-SCRIPT.md |
+
+---
+
+## Architecture
+
+```
+┌─────────────────────────────────────────────────────────┐
+│                  VM Plateforme (Infomaniak)              │
+│  IP: 84.234.27.147                                      │
+│                                                          │
+│  ┌──────────┐   ┌─────────────┐   ┌──────────────────┐ │
+│  │  nginx   │──▶│  Flask app  │──▶│  watch_requests  │ │
+│  │  :80     │   │  :5000      │   │  (cron destroy)  │ │
+│  └──────────┘   └──────┬──────┘   └────────┬─────────┘ │
+│                         │                   │           │
+│                    requests/         tofu apply         │
+│                   *.json              (OpenStack)       │
+└─────────────────────────────────────────────────────────┘
+                                │
+                    ┌───────────▼────────────┐
+                    │   Infomaniak Public    │
+                    │   Cloud (OpenStack)    │
+                    │                        │
+                    │  groupe-a  │  groupe-b │  (isolés)
+                    │  VM-001    │  VM-002   │
+                    │  VM-003    │  ...      │
+                    └────────────────────────┘
+```
+
+**Stack technique :** OpenTofu + provider OpenStack, Flask (Python), nginx, cloud-init, bash, jq, systemd.
+
+---
+
+## MUST — Cahier des charges (6/6 ✅)
+
+| Exigence | Implémentation | Preuve |
+|----------|---------------|--------|
+| Portail de demande avec dates obligatoires | Flask + formulaire HTML | Refus si date de fin absente |
+| Workflow de validation | Page `/validate` (approuver/refuser) | `requests/*.json` status |
+| Provisioning automatisé | OpenTofu + provider OpenStack | VM ACTIVE sur Infomaniak |
+| Destruction automatique à échéance | `destroy_expired.sh` + cron 10min | `logs/destructions.log` |
+| Dashboard basique (up/down) | Page `/dashboard` + `status.sh` | Statut ACTIVE/SHUTOFF en live |
+| SSH sécurisé + isolation réseau | cloud-init + réseau privé par groupe | `test_isolation.sh` |
+
+## Bonus livrés
+
+- Dashboard de coûts détaillé (par VM + par groupe + total estimé)
+- Notification visuelle avant échéance (badge "expire aujourd'hui / expire demain")
+- Mini-rapport de fin de hackathon avec journal des destructions
+
+---
+
+## Structure du repo
+
+```
+hackathon-platform/
+├── infra/
+│   ├── main.tf                   # Provider OpenStack, réseaux, VMs, floating IPs
+│   ├── variables.tf              # Image Ubuntu 22.04, flavor, réseau externe
+│   ├── outputs.tf                # floating_ip par VM
+│   ├── vms.auto.tfvars.json      # État désiré (source de vérité)
+│   └── openrc-auto.sh.template   # Template credentials OpenStack (ne pas committer openrc-auto.sh)
+├── portal/
+│   ├── app.py                    # Flask : catalogue, validation, dashboard, rapport
+│   ├── templates/                # HTML (base, index, pending, dashboard, report)
+│   ├── static/style.css          # Thème console sombre
+│   └── run.sh                    # Lancement local avec venv
+├── scripts/
+│   ├── provision.sh              # Ajoute une VM à l'état désiré + tofu apply
+│   ├── destroy_expired.sh        # Nettoie les VMs expirées + tofu apply
+│   ├── watch_requests.sh         # Surveille requests/ et provisionne automatiquement
+│   ├── status.sh                 # Statut live des VMs (JSON pour le dashboard)
+│   ├── test_isolation.sh         # Prouve l'isolation réseau entre deux groupes
+│   ├── new_request.sh            # Crée une demande de test sans passer par le portail
+│   ├── reset_demo.sh             # Remet l'environnement à zéro avant une démo
+│   └── demo.sh                   # Lance watcher + portail en une commande (local)
+├── docs/
+│   ├── ADR-001-infrastructure.md # Décisions d'architecture justifiées
+│   └── DEMO-SCRIPT.md            # Déroulé J3 + Plan B
+├── requests/                     # Fichiers JSON des demandes (écrits par le portail)
+└── logs/                         # destructions.log + watcher.log
+```
+
+---
+
+## Démarrage — VM Plateforme (démo J3)
+
+Le portail et le watcher tournent déjà en production sur la VM plateforme `84.234.27.147`. Pour la démo, rien à démarrer — tout est actif.
+
+Pour vérifier l'état :
 
 ```bash
-# 1. construire l'image de base utilisée pour chaque VM
-docker build -t hackathon-vm-base:latest infra/image
+ssh -i /tmp/demo_key ubuntu@84.234.27.147
+sudo systemctl status hackathon-portal
+tail -f ~/hackathon-platform/logs/watcher.log
+```
 
-# 2. initialiser Terraform/OpenTofu
+---
+
+## Démarrage — Machine locale (développement)
+
+### Prérequis
+
+- Docker Desktop + WSL2 (Windows) ou Linux natif
+- OpenTofu (`tofu --version`)
+- `jq`, `git`, Python 3.10+
+
+### Installation
+
+```bash
+git clone https://github.com/Alexisrx/Hackathon-Juillet-2026-.git hackathon-platform
+cd hackathon-platform
+
+# Credentials OpenStack (ne jamais committer)
+cp infra/openrc-auto.sh.template infra/openrc-auto.sh
+nano infra/openrc-auto.sh  # remplir OS_PASSWORD
+
+# Initialiser OpenTofu
+source infra/openrc-auto.sh
 cd infra && tofu init && cd ..
 
-# 3. générer une paire de clés de test (si besoin)
+# Lancer portail + watcher
+./scripts/demo.sh
+# → http://localhost:5000
+```
+
+### Scénario de test complet
+
+```bash
+# Générer une clé SSH de test
 ssh-keygen -t ed25519 -f /tmp/demo_key -N ""
 
-# 4. simuler une demande approuvée par le portail (équipe Dev)
+# Créer et provisionner une VM (sans passer par le portail)
 ./scripts/new_request.sh req-001 alice groupe-a 2026-07-10 /tmp/demo_key.pub
-
-# 5. provisionner la VM correspondante
 ./scripts/provision.sh requests/req-001.json
 
-# 6. se connecter en SSH
-ssh -i /tmp/demo_key -p 2200 student@localhost
+# Créer une deuxième VM dans un autre groupe
+ssh-keygen -t ed25519 -f /tmp/demo_key2 -N ""
+./scripts/new_request.sh req-002 bob groupe-b 2026-07-10 /tmp/demo_key2.pub
+./scripts/provision.sh requests/req-002.json
 
-# 7. voir le statut de toutes les VMs (format consommé par le dashboard Data)
+# Prouver l'isolation réseau
+./scripts/test_isolation.sh req-001 req-002 /tmp/demo_key
+
+# Tester la destruction automatique
+./scripts/new_request.sh req-003 charlie groupe-a 2020-01-01 /tmp/demo_key.pub
+./scripts/provision.sh requests/req-003.json
+./scripts/destroy_expired.sh   # req-003 disparaît, req-001 et req-002 restent
+
+# Statut JSON (consommé par le dashboard)
 ./scripts/status.sh
 ```
 
-## Scénario de démo de bout en bout
+---
 
-1. `new_request.sh` pour créer une demande (simule le portail).
-2. `provision.sh` : la VM apparaît (`docker ps`), SSH fonctionne.
-3. Créer une deuxième VM dans un **autre** groupe, puis lancer
-   `./scripts/test_isolation.sh req-001 req-002` pour prouver en direct
-   que les deux groupes ne peuvent pas se joindre.
-4. Créer une troisième demande avec une `end_date` déjà passée, lancer
-   `./scripts/destroy_expired.sh` et montrer que la VM est détruite
-   automatiquement (`docker ps` ne la montre plus, `logs/destructions.log`
-   trace l'événement).
-5. `./scripts/status.sh` pour montrer le flux JSON consommé par le
-   dashboard de l'équipe Data.
+## Contrat d'interface entre les modules
 
-## Automatisation de la destruction
+### Portail → Infra
 
-`scripts/destroy_expired.sh` est conçu pour tourner en tâche périodique.
-En hackathon, le plus simple :
+Le portail écrit un fichier JSON dans `requests/` :
 
-```bash
-# toutes les 10 minutes
-crontab -e
-*/10 * * * * /chemin/vers/hackathon-platform/scripts/destroy_expired.sh
+```json
+{
+  "id": "req-001",
+  "owner": "alice",
+  "group": "groupe-a",
+  "template": "ubuntu-dev",
+  "start_date": "2026-07-08",
+  "end_date": "2026-07-10",
+  "ssh_public_key": "ssh-ed25519 AAAA...",
+  "status": "approved"
+}
 ```
 
-Une alternative systemd (`unit` + `timer`) est fournie en exemple dans
-`scripts/hackathon-destroy.timer.example`.
+`watch_requests.sh` détecte ce fichier et déclenche `provision.sh` automatiquement.
 
-## Portail web (catalogue, validation, dashboard, rapport)
+### Infra → Dashboard
 
-Un portail Flask (`portal/`) couvre les MUST côté Développeur (catalogue de
-3 templates, formulaire de demande, workflow de validation) et côté Data
-(dashboard up/down, estimation de coûts, mini-rapport), regroupés dans une
-seule petite app pour rester simple à lancer en 3 jours. Peut être scindé
-en plusieurs services si l'équipe se répartit dessus plus tard — le contrat
-avec l'infra (le dossier `requests/`) reste identique dans tous les cas.
+`scripts/status.sh` retourne un tableau JSON :
 
-```bash
-cd portal
-./run.sh
-# ouvrir http://localhost:5000
+```json
+[
+  {
+    "id": "req-001",
+    "owner": "alice",
+    "group": "groupe-a",
+    "template": "ubuntu-dev",
+    "end_date": "2026-07-10",
+    "floating_ip": "84.234.25.105",
+    "status": "up"
+  }
+]
 ```
 
-Pages : `/` (catalogue + demande), `/validate` (file de validation),
-`/dashboard` (statut + coûts), `/report` (mini-rapport).
+---
 
-Le portail écrit un fichier JSON dans `requests/` avec `status: "pending"`,
-puis `"approved"` ou `"refused"` une fois validé. Il ne connaît rien à
-Terraform/Docker : c'est `scripts/watch_requests.sh` (à lancer en parallèle,
-voir plus haut) qui détecte les demandes approuvées et déclenche le
-provisioning automatiquement.
+## Sécurité
 
-Pour la démo, lancer dans des terminaux séparés :
-```bash
-./scripts/watch_requests.sh   # terminal 1 : provisionne automatiquement
-cd portal && ./run.sh          # terminal 2 : portail web
+- **SSH par clé uniquement** : `PasswordAuthentication no`, `PermitRootLogin no` (cloud-init)
+- **Utilisateur `student`** sans sudo — clé injectée par cloud-init
+- **Isolation réseau** : un réseau OpenStack privé par groupe, des VMs de groupes différents ne peuvent pas se joindre par IP privée
+- **Aucune VM sans date de fin** : refus côté portail et côté `provision.sh`
+- **Credentials** : `openrc-auto.sh` dans `.gitignore`, jamais commité
+
+---
+
+## Destruction automatique
+
+`scripts/destroy_expired.sh` tourne en cron toutes les 10 minutes sur la VM plateforme :
+
+```
+*/10 * * * * /home/ubuntu/hackathon-platform/scripts/destroy_expired.sh
 ```
 
-## Intégration avec l'équipe Développeur
+Chaque destruction est tracée dans `logs/destructions.log`.
 
-Le contrat d'interface est volontairement minimal : un fichier JSON dans
-`requests/` avec `status: "approved"` une fois la demande validée (voir le
-format en commentaire dans `scripts/provision.sh`). Le portail fourni dans
-`portal/` l'implémente déjà ; si l'équipe Dev préfère reprendre la main,
-elle peut remplacer `portal/` par sa propre implémentation tant qu'elle
-écrit ce même format dans `requests/`.
-
-## Intégration avec l'équipe Data
-
-`scripts/status.sh` retourne un tableau JSON `[{id, owner, group, template,
-end_date, ssh_port, status: "up"|"down"|"unknown"}, ...]`, directement
-exploitable pour un dashboard et l'estimation de coûts/usage.
-`logs/destructions.log` donne un historique simple pour le mini-rapport de
-fin de hackathon. Une implémentation de référence des deux (dashboard +
-rapport) est déjà fournie dans `portal/` (`/dashboard`, `/report`) ; à
-adapter ou enrichir si l'équipe Data veut une présentation différente.
+---
 
 ## Limites connues (MVP 3 jours)
 
-- VMs simulées par des conteneurs Docker, pas une infra cloud réelle
-  (changement de provider possible sans réécrire l'architecture, voir ADR).
-- Destruction pilotée par un job périodique, pas un mécanisme cloud natif.
-- Pas de SSO O365/OIDC réel sur ce module (bonus, hors MUST) — l'identité
-  de l'`owner` est transmise telle quelle par le portail.
+- **État Terraform local** : `terraform.tfstate` stocké sur la VM plateforme, pas dans un backend distant (S3/Swift). En production, utiliser un backend OpenStack Swift ou Terraform Cloud.
+- **Coûts estimés** : indicatifs, basés sur un tarif fixe par template, pas sur les prix réels Infomaniak.
+- **Pas de SSO O365** : authentification simple par nom/groupe saisi dans le formulaire.
+- **Pas de monitoring Prometheus/Grafana** : le dashboard de statut est basique (ACTIVE/SHUTOFF).
+
+---
+
+*Hackathon Juillet 2026 — Geneva Institute of Technology × Satom IT & Learning Solutions*
