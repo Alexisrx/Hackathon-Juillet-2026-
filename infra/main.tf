@@ -125,6 +125,7 @@ resource "openstack_compute_instance_v2" "vm" {
 
 # Floating IP associee au port explicite -> association garantie
 resource "openstack_networking_floatingip_v2" "vm_fip" {
+  depends_on = [openstack_networking_router_interface_v2.group_router_iface]
   for_each = var.vms
   pool     = var.floating_ip_pool
   port_id  = openstack_networking_port_v2.vm_port[each.key].id
