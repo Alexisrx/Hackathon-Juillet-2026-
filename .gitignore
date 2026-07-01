@@ -13,3 +13,4 @@ infra/openrc-auto.sh
 portal/.venv/
 portal/__pycache__/
 portal/*.pyc
+infra/terraform.tfstate*.backup
