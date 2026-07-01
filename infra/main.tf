@@ -1,76 +1,131 @@
 terraform {
   required_version = ">= 1.6.0"
   required_providers {
-    docker = {
-      source  = "kreuzwerker/docker"
+    openstack = {
+      source  = "terraform-provider-openstack/openstack"
       version = "~> 3.0"
     }
   }
 }
 
-provider "docker" {}
-
-# ---------------------------------------------------------------------------
-# Etat desire : la map var.vms (alimentee par scripts/provision.sh et
-# scripts/destroy_expired.sh) represente l'ensemble des VMs qui DOIVENT
-# exister maintenant. Tofu se charge de creer ce qui manque et de detruire
-# ce qui a ete retire de la map -> reconciliation declarative, pas de
-# commande "destroy" manuelle a piloter en plus.
-# ---------------------------------------------------------------------------
+provider "openstack" {}
 
 locals {
   groups = toset([for k, v in var.vms : v.group])
 }
 
-# Un reseau Docker dedie par groupe = isolation reseau entre groupes.
-# Deux conteneurs sur deux reseaux differents ne peuvent pas se joindre
-# par defaut avec le driver bridge de Docker.
-resource "docker_network" "group_net" {
-  for_each = local.groups
-  name     = "hackathon-${each.key}"
+resource "openstack_networking_network_v2" "group_net" {
+  for_each       = local.groups
+  name           = "hackathon-${each.key}"
+  admin_state_up = true
 }
 
-resource "docker_image" "vm_base" {
-  name         = var.image_tag
-  keep_locally = true
+resource "openstack_networking_subnet_v2" "group_subnet" {
+  for_each        = local.groups
+  name            = "hackathon-${each.key}-subnet"
+  network_id      = openstack_networking_network_v2.group_net[each.key].id
+  cidr            = "10.10.0.0/24"
+  ip_version      = 4
+  dns_nameservers = ["1.1.1.1", "8.8.8.8"]
 }
 
-resource "docker_container" "vm" {
+resource "openstack_networking_router_v2" "group_router" {
+  for_each            = local.groups
+  name                = "hackathon-${each.key}-router"
+  admin_state_up      = true
+  external_network_id = var.external_network_id
+}
+
+resource "openstack_networking_router_interface_v2" "group_router_iface" {
+  for_each  = local.groups
+  router_id = openstack_networking_router_v2.group_router[each.key].id
+  subnet_id = openstack_networking_subnet_v2.group_subnet[each.key].id
+}
+
+resource "openstack_networking_secgroup_v2" "group_sg" {
+  for_each    = local.groups
+  name        = "hackathon-${each.key}-sg"
+  description = "Security group hackathon groupe ${each.key}"
+}
+
+resource "openstack_networking_secgroup_rule_v2" "ssh_in" {
+  for_each          = local.groups
+  direction         = "ingress"
+  ethertype         = "IPv4"
+  protocol          = "tcp"
+  port_range_min    = 22
+  port_range_max    = 22
+  remote_ip_prefix  = "0.0.0.0/0"
+  security_group_id = openstack_networking_secgroup_v2.group_sg[each.key].id
+}
+
+resource "openstack_networking_secgroup_rule_v2" "icmp_in" {
+  for_each          = local.groups
+  direction         = "ingress"
+  ethertype         = "IPv4"
+  protocol          = "icmp"
+  remote_ip_prefix  = "0.0.0.0/0"
+  security_group_id = openstack_networking_secgroup_v2.group_sg[each.key].id
+}
+
+resource "openstack_compute_keypair_v2" "vm_key" {
+  for_each   = var.vms
+  name       = "hackathon-key-${each.key}"
+  public_key = each.value.ssh_public_key
+}
+
+# Port reseau explicite : cree avant la VM et la floating IP,
+# ce qui garantit que l'association floating IP -> port -> VM est complete.
+resource "openstack_networking_port_v2" "vm_port" {
+  for_each           = var.vms
+  name               = "hackathon-port-${each.key}"
+  network_id         = openstack_networking_network_v2.group_net[each.value.group].id
+  security_group_ids = [openstack_networking_secgroup_v2.group_sg[each.value.group].id]
+  admin_state_up     = true
+
+  fixed_ip {
+    subnet_id = openstack_networking_subnet_v2.group_subnet[each.value.group].id
+  }
+}
+
+resource "openstack_compute_instance_v2" "vm" {
+  for_each    = var.vms
+  name        = "vm-${each.key}"
+  image_id    = var.image_id
+  flavor_name = var.flavor_name
+  key_pair    = openstack_compute_keypair_v2.vm_key[each.key].name
+
+  network {
+    port = openstack_networking_port_v2.vm_port[each.key].id
+  }
+
+  metadata = {
+    "hackathon.end_date" = each.value.end_date
+    "hackathon.group"    = each.value.group
+    "hackathon.owner"    = each.value.owner
+    "hackathon.template" = each.value.template
+  }
+
+  user_data = <<-CLOUD_INIT
+    #cloud-config
+    users:
+      - name: student
+        ssh_authorized_keys:
+          - ${each.value.ssh_public_key}
+        shell: /bin/bash
+    write_files:
+      - path: /etc/ssh/sshd_config.d/99-hardening.conf
+        content: |
+          PermitRootLogin no
+          PasswordAuthentication no
+    runcmd:
+      - systemctl restart ssh
+    CLOUD_INIT
+}
+
+# Floating IP associee au port explicite -> association garantie
+resource "openstack_networking_floatingip_v2" "vm_fip" {
   for_each = var.vms
-
-  name  = "vm-${each.key}"
-  image = docker_image.vm_base.image_id
-
-  networks_advanced {
-    name = docker_network.group_net[each.value.group].name
-  }
-
-  env = [
-    "SSH_PUBLIC_KEY=${each.value.ssh_public_key}",
-  ]
-
-  labels {
-    label = "hackathon.end_date"
-    value = each.value.end_date
-  }
-  labels {
-    label = "hackathon.group"
-    value = each.value.group
-  }
-  labels {
-    label = "hackathon.owner"
-    value = each.value.owner
-  }
-  labels {
-    label = "hackathon.template"
-    value = each.value.template
-  }
-
-  ports {
-    internal = 22
-    external = each.value.ssh_port
-  }
-
-  must_run = true
-  restart  = "unless-stopped"
+  pool     = var.floating_ip_pool
+  port_id  = openstack_networking_port_v2.vm_port[each.key].id
 }

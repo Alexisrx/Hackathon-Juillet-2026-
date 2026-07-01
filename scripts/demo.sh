@@ -1,7 +1,14 @@
 #!/usr/bin/env bash
+# demo.sh — lance le watcher + le portail en une seule commande.
+# Source openrc-auto.sh pour que le watcher ait les credentials OpenStack.
 set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
+[[ -f "$SCRIPT_DIR/../infra/openrc-auto.sh" ]] || {
+  echo "ERREUR : infra/openrc-auto.sh manquant (copier le template et remplir le mot de passe)." >&2
+  exit 1
+}
+source "$SCRIPT_DIR/../infra/openrc-auto.sh"
 mkdir -p "$SCRIPT_DIR/../logs"
 
 echo "==> Demarrage du watcher en arriere-plan (logs: logs/watcher.log)"

@@ -1,15 +1,8 @@
 #!/usr/bin/env bash
 #
-# destroy_expired.sh — applique l'exigence "aucune VM sans date de fin".
-# A executer periodiquement (cron toutes les 5-15 min, ou systemd timer).
-#
-# Principe : retire de l'etat desire (vms.auto.tfvars.json) toute VM dont
-# end_date < aujourd'hui, puis relance `tofu apply`. Comme l'etat desire
-# ne contient plus ces VMs, Tofu les detruit automatiquement (pas besoin
-# de cibler chaque ressource manuellement).
-#
+# destroy_expired.sh — detruit automatiquement les VMs dont end_date < aujourd'hui.
+# A lancer en cron toutes les 10 minutes.
 set -euo pipefail
-
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 INFRA_DIR="$SCRIPT_DIR/../infra"
 TFVARS="$INFRA_DIR/vms.auto.tfvars.json"
@@ -18,6 +11,7 @@ TODAY=$(date +%Y-%m-%d)
 
 mkdir -p "$(dirname "$LOG_FILE")"
 command -v jq >/dev/null 2>&1 || { echo "jq est requis." >&2; exit 1; }
+[[ -f "$INFRA_DIR/openrc-auto.sh" ]] && source "$INFRA_DIR/openrc-auto.sh"
 
 EXPIRED=$(jq -r --arg today "$TODAY" \
   '.vms | to_entries[] | select(.value.end_date < $today) | .key' "$TFVARS")
@@ -36,5 +30,4 @@ for ID in $EXPIRED; do
 done
 
 ( cd "$INFRA_DIR" && tofu apply -auto-approve )
-
 echo "$(date -Iseconds) - reconciliation terminee, $(echo "$EXPIRED" | wc -l) VM(s) detruite(s)" >> "$LOG_FILE"
