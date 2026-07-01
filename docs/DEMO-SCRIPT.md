@@ -1,71 +1,152 @@
-# Déroulé de la démo live — J3
+# Scénario de démo live — J3
 
-Durée cible : 8-10 min. Objectif : prouver que le scénario de bout en bout
-fonctionne réellement, pas seulement qu'il est codé.
+**Durée cible : 8-10 minutes**  
+**URL portail : http://84.234.27.147**  
+**VM plateforme : ssh -i /tmp/demo_key ubuntu@84.234.27.147**
 
-## Avant la démo (la veille ou le matin même)
+---
 
-1. `./scripts/reset_demo.sh` pour repartir d'un état propre.
-2. Répéter le scénario complet une fois en entier, chronométré.
-3. **Enregistrer cette répétition réussie** (capture d'écran vidéo,
-   ex. l'outil Xbox Game Bar sous Windows `Win+G`, ou OBS) — c'est le Plan B
-   si le live plante devant le jury. Mieux vaut montrer un enregistrement
-   propre que de perdre 5 minutes à déboguer en direct.
-4. Vérifier que Docker Desktop est lancé et que `docker ps` répond avant
-   d'arriver devant le jury.
+## Avant la démo (la veille ou le matin)
+
+1. **Reset et vérification** sur la VM plateforme :
+   ```bash
+   ssh -i /tmp/demo_key ubuntu@84.234.27.147
+   cd ~/hackathon-platform
+   sudo systemctl status hackathon-portal    # doit être active (running)
+   ps aux | grep watch_requests              # watcher actif
+   crontab -l                                # cron */10 * * * *
+   ./scripts/reset_demo.sh                   # repartir propre
+   ```
+
+2. **Répéter le scénario complet** une fois, chronométré.
+
+3. **Enregistrer la répétition** (Xbox Game Bar `Win+G` ou OBS) — Plan B si le live plante.
+
+4. **Générer les clés SSH de test** sur la machine de démo :
+   ```bash
+   ssh-keygen -t ed25519 -f /tmp/demo_key_alice -N ""
+   ssh-keygen -t ed25519 -f /tmp/demo_key_bob -N ""
+   cat /tmp/demo_key_alice.pub  # à copier dans le formulaire
+   ```
+
+---
 
 ## Déroulé
 
-**1. Contexte (30s)**
-Rappel du besoin : plateforme self-service de VMs pour étudiants/formateurs,
-cycle de vie complet de la demande à la destruction automatique.
+### 1. Contexte (30s)
 
-**2. Architecture (1 min)**
-Montrer `docs/ADR-001-infrastructure.md` à l'écran : OpenTofu + Docker
-(VMs simulées, migration possible vers un cloud réel), un réseau par
-groupe pour l'isolation, état déclaratif unique pour provisioning et
-destruction.
+> "On a construit une plateforme self-service complète de gestion de VMs cloud. Un étudiant fait une demande, un formateur valide, la VM est provisionnée automatiquement sur Infomaniak Public Cloud et détruite à son échéance. Tout est en Infrastructure as Code avec OpenTofu."
 
-**3. Démo live (5-6 min)**
+---
 
+### 2. Architecture (1 min)
+
+Montrer `docs/ADR-001-infrastructure.md`. Points clés :
+- OpenTofu + provider OpenStack → vraies VMs Infomaniak
+- **CIDRs uniques par groupe** : groupe-b → `192.168.10.0/24`, groupe-c → `192.168.20.0/24` — pas de route entre groupes, isolation par topologie réseau
+- État déclaratif : même mécanisme pour créer et détruire
+- VM plateforme dédiée : portail accessible depuis internet 24/7
+
+---
+
+### 3. Démo live (5-6 min)
+
+**Ouvrir http://84.234.27.147**
+
+**a. Catalogue et refus sans date de fin (30s)**
+- Montrer les 3 templates disponibles
+- Tenter de soumettre sans date de fin → refus immédiat du formulaire
+- C'est voulu : "aucune VM sans échéance"
+
+**b. Demande complète (30s)**
+- Remplir : nom=alice, groupe=groupe-b, date de fin proche, coller `/tmp/demo_key_alice.pub`
+- Soumettre → "en attente de validation"
+
+**c. Validation (15s)**
+- Onglet **validation** → approuver
+- Statut passe à "approved"
+
+**d. Provisioning automatique (1-2 min)**
+- Dans le terminal de la VM plateforme :
+  ```bash
+  tail -f ~/hackathon-platform/logs/watcher.log
+  ```
+- Montrer `tofu apply` qui tourne tout seul, sans commande manuelle
+- `Apply complete! Resources: 11 added` → VM ACTIVE sur Infomaniak avec IP `192.168.10.x`
+
+**e. Connexion SSH sécurisée (30s)**
 ```bash
-./scripts/demo.sh
+ssh -i /tmp/demo_key_alice student@<floating-ip>
+whoami      # student
+sudo -l     # pas de sudo → sécurité prouvée
+exit
 ```
 
-- Aller sur `http://localhost:5000`, montrer le catalogue de templates.
-- Remplir une demande avec une date de fin **dans 2-3 minutes** (pas dans
-  10 jours) pour pouvoir montrer la destruction automatique en direct sans
-  attendre.
-- Montrer qu'une demande **sans date de fin** est refusée par le formulaire
-  lui-même (exigence "aucune VM sans échéance", visible dès la saisie).
-- Onglet **validation** : approuver la demande.
-- Terminal : montrer le watcher qui détecte et provisionne automatiquement
-  (`tofu apply` qui tourne tout seul, sans commande manuelle).
-- `ssh -i /tmp/demo_key -p <port> student@localhost` pour prouver l'accès
-  par clé (pas de mot de passe demandé).
-- `./scripts/test_isolation.sh <id_a> <id_b>` avec deux VMs de groupes
-  différents pour prouver l'isolation réseau.
-- Onglet **dashboard** : statut up/down, coûts estimés, badge "expire
-  bientôt".
-- Attendre (ou lancer manuellement `./scripts/destroy_expired.sh` dans un
-  terminal) pour montrer la VM disparaître automatiquement une fois la
-  date de fin atteinte.
-- Onglet **rapport** : statistiques globales + répartition des coûts par
-  groupe.
+**f. Isolation réseau avec CIDRs distincts (45s)**
 
-**4. Conclusion (1 min)**
-Récapituler les 6 exigences MUST couvertes, mentionner les choix
-documentés dans l'ADR, et le bonus livré (notification visuelle avant
-échéance, dashboard de coûts détaillé).
+Créer une deuxième VM dans groupe-c (`192.168.20.0/24`) :
+```bash
+./scripts/new_request.sh req-002 bob groupe-c 2026-07-10 /tmp/demo_key_bob.pub
+./scripts/provision.sh requests/req-002.json
+```
 
-## Plan B — si quelque chose plante en direct
+Puis prouver l'isolation :
+```bash
+./scripts/test_isolation.sh req-001 req-002 /tmp/demo_key_alice
+# OK : vm-req-001 (192.168.10.x) ne peut pas joindre vm-req-002 (192.168.20.x)
+# → CIDRs différents, pas de route entre les réseaux
+```
 
-- Docker/Tofu ne répond pas : couper court, dire "je bascule sur
-  l'enregistrement de la répétition" et lancer la vidéo préparée à
-  l'avance. Ne pas chercher à déboguer devant le jury.
-- Le portail ne charge pas : montrer directement `./scripts/status.sh` et
-  `cat logs/destructions.log` dans un terminal — la preuve fonctionnelle
-  ne dépend pas de l'UI.
-- Le watcher semble ne rien détecter : lancer `./scripts/provision.sh
-  requests/<id>.json` manuellement pour ne pas bloquer la démo, et
-  mentionner que l'automatisation a été prouvée en répétition.
+**g. Dashboard et rapport (1 min)**
+- Onglet **dashboard** : statut up (point vert), heures actives, coût estimé, badge "expire bientôt"
+- Onglet **rapport** : stats globales, répartition coûts par groupe, journal destructions
+
+**h. Destruction automatique (30s)**
+```bash
+./scripts/destroy_expired.sh
+cat logs/destructions.log
+```
+La VM expirée disparaît du dashboard — toutes ses ressources (instance, port, floating IP, keypair) sont supprimées.
+
+---
+
+### 4. Conclusion (1 min)
+
+> "6 exigences MUST couvertes, sur de vraies VMs Infomaniak. En bonus : dashboard de coûts détaillé et notification avant échéance. Le tout est reproductible depuis zéro avec `git clone` + `tofu apply`."
+
+---
+
+## Plan B — si quelque chose plante
+
+| Problème | Réponse |
+|----------|---------|
+| Portail inaccessible | `ssh ubuntu@84.234.27.147 "sudo systemctl restart hackathon-portal"` |
+| Watcher ne réagit pas | `./scripts/provision.sh requests/<id>.json` manuellement |
+| SSH vers VM refuse | Attendre 60s (cloud-init), puis `openstack server show vm-<id>` |
+| Tofu plante | Basculer sur la vidéo enregistrée la veille |
+| Connexion internet coupée | Hotspot 4G mobile |
+| Plus de 60s de débogage | Basculer sur la vidéo — ne jamais déboguer plus d'1 minute devant le jury |
+
+---
+
+## Informations techniques
+
+```
+Portail web              http://84.234.27.147
+VM plateforme (SSH)      ssh -i /tmp/demo_key ubuntu@84.234.27.147
+Projet OpenStack         PCP-YV8RZH7
+Région                   dc3-a
+Image                    Ubuntu 22.04 LTS (bdee52cf-...)
+Flavor                   a1-ram2-disk50-perf1 (1 vCPU, 2 GB, 50 GB)
+Réseau ext (floating IP) ext-floating1
+
+CIDRs par groupe (alphabétique) :
+  groupe-b → 192.168.10.0/24  (actuellement actif)
+  groupe-c → 192.168.20.0/24
+  groupe-d → 192.168.30.0/24
+  ...
+```
+
+---
+
+*Hackathon Juillet 2026 — Geneva Institute of Technology × Satom IT & Learning Solutions*
