@@ -1,1 +1,312 @@
-Surveillance de /home/alexis/hackathon-platform/scripts/../requests toutes les 5s (Ctrl+C pour arreter)...
+nohup: ignoring input
+Surveillance de /home/ubuntu/hackathon-platform/scripts/../requests toutes les 5s (Ctrl+C pour arreter)...
+==> Nouvelle demande approuvee detectee : req-006
+==> VM req-006 ajoutee a l'etat desire (groupe=groupe1, fin=2026-07-01).
+==> Application OpenTofu...
+[0m[1mopenstack_networking_secgroup_v2.group_sg["groupe-a"]: Refreshing state... [id=7b858d56-594d-4355-9176-eb0a2001f0fa][0m
+[0m[1mopenstack_compute_keypair_v2.vm_key["req-001"]: Refreshing state... [id=hackathon-key-req-001][0m
+[0m[1mopenstack_networking_network_v2.group_net["groupe-b"]: Refreshing state... [id=e8ad978c-266a-47b7-adcd-7009e6fe4357][0m
+[0m[1mopenstack_networking_secgroup_v2.group_sg["groupe-b"]: Refreshing state... [id=af3cf47c-2bbb-4868-b813-b0b996beab7f][0m
+[0m[1mopenstack_networking_router_v2.group_router["groupe-a"]: Refreshing state... [id=4862eccf-a7dd-4af5-bb77-2796175cf13d][0m
+[0m[1mopenstack_compute_keypair_v2.vm_key["req-002"]: Refreshing state... [id=hackathon-key-req-002][0m
+[0m[1mopenstack_networking_network_v2.group_net["groupe-a"]: Refreshing state... [id=146594b5-008c-4ab5-a0cf-ae452219df63][0m
+[0m[1mopenstack_networking_router_v2.group_router["groupe-b"]: Refreshing state... [id=05e74140-d8da-408e-9b70-6948b6d48077][0m
+[0m[1mopenstack_networking_subnet_v2.group_subnet["groupe-a"]: Refreshing state... [id=6576b0eb-8ea7-4822-9c58-07c5c7e889ea][0m
+[0m[1mopenstack_networking_subnet_v2.group_subnet["groupe-b"]: Refreshing state... [id=674cb2f7-5a49-4a71-91fd-38ccef3806bf][0m
+[0m[1mopenstack_networking_router_interface_v2.group_router_iface["groupe-b"]: Refreshing state... [id=fc6cd959-debb-40b9-836c-8991156f4cae][0m
+[0m[1mopenstack_networking_router_interface_v2.group_router_iface["groupe-a"]: Refreshing state... [id=bb93c52f-e06b-4b57-9f3c-5f3daf19f6c7][0m
+[0m[1mopenstack_networking_secgroup_rule_v2.icmp_in["groupe-b"]: Refreshing state... [id=872c3281-8438-4df5-a984-0015e82909b9][0m
+[0m[1mopenstack_networking_secgroup_rule_v2.ssh_in["groupe-a"]: Refreshing state... [id=3503a33c-6217-4bd7-85f2-cb074e07119d][0m
+[0m[1mopenstack_networking_port_v2.vm_port["req-001"]: Refreshing state... [id=215b3a8d-1e2e-411e-b4a5-cd749f0cb794][0m
+[0m[1mopenstack_networking_secgroup_rule_v2.ssh_in["groupe-b"]: Refreshing state... [id=3c7f655e-4281-475b-b5fc-887330815b55][0m
+[0m[1mopenstack_networking_port_v2.vm_port["req-002"]: Refreshing state... [id=e9840087-6f1b-441c-b750-48af99e53763][0m
+[0m[1mopenstack_networking_secgroup_rule_v2.icmp_in["groupe-a"]: Refreshing state... [id=d42c27a5-7023-43b8-8f81-2a8781b10926][0m
+[0m[1mopenstack_compute_instance_v2.vm["req-001"]: Refreshing state... [id=ac43578d-4acd-4841-b61a-dc9141080d49][0m
+[0m[1mopenstack_compute_instance_v2.vm["req-002"]: Refreshing state... [id=3696564d-0a1d-4f0f-962c-b2ce639986cf][0m
+[0m[1mopenstack_networking_floatingip_v2.vm_fip["req-001"]: Refreshing state... [id=038dee3e-08e4-47b1-a3fd-324e0447586d][0m
+[0m[1mopenstack_networking_floatingip_v2.vm_fip["req-002"]: Refreshing state... [id=2c630211-2e62-4608-9d49-1b4b104b4b1d][0m
+
+OpenTofu used the selected providers to generate the following execution
+plan. Resource actions are indicated with the following symbols:
+  [32m+[0m create[0m
+
+OpenTofu will perform the following actions:
+
+[1m  # openstack_compute_instance_v2.vm["req-006"][0m will be created
+[0m  [32m+[0m[0m resource "openstack_compute_instance_v2" "vm" {
+      [32m+[0m[0m access_ip_v4        = (known after apply)
+      [32m+[0m[0m access_ip_v6        = (known after apply)
+      [32m+[0m[0m all_metadata        = (known after apply)
+      [32m+[0m[0m all_tags            = (known after apply)
+      [32m+[0m[0m availability_zone   = (known after apply)
+      [32m+[0m[0m created             = (known after apply)
+      [32m+[0m[0m flavor_id           = (known after apply)
+      [32m+[0m[0m flavor_name         = "a1-ram2-disk50-perf1"
+      [32m+[0m[0m force_delete        = false
+      [32m+[0m[0m hypervisor_hostname = (known after apply)
+      [32m+[0m[0m id                  = (known after apply)
+      [32m+[0m[0m image_id            = "bdee52cf-0fd7-4323-813f-9a40a509d2dc"
+      [32m+[0m[0m image_name          = (known after apply)
+      [32m+[0m[0m key_pair            = "hackathon-key-req-006"
+      [32m+[0m[0m metadata            = {
+          [32m+[0m[0m "hackathon.end_date" = "2026-07-01"
+          [32m+[0m[0m "hackathon.group"    = "groupe1"
+          [32m+[0m[0m "hackathon.owner"    = "toto"
+          [32m+[0m[0m "hackathon.template" = "ubuntu-dev"
+        }
+      [32m+[0m[0m name                = "vm-req-006"
+      [32m+[0m[0m power_state         = "active"
+      [32m+[0m[0m region              = (known after apply)
+      [32m+[0m[0m security_groups     = (known after apply)
+      [32m+[0m[0m stop_before_destroy = false
+      [32m+[0m[0m updated             = (known after apply)
+      [32m+[0m[0m user_data           = "0fbc10ff1d67235155ad1d2d9a16c5e63c0e8754"
+
+      [32m+[0m[0m network {
+          [32m+[0m[0m access_network = false
+          [32m+[0m[0m fixed_ip_v4    = (known after apply)
+          [32m+[0m[0m fixed_ip_v6    = (known after apply)
+          [32m+[0m[0m mac            = (known after apply)
+          [32m+[0m[0m name           = (known after apply)
+          [32m+[0m[0m port           = (known after apply)
+          [32m+[0m[0m uuid           = (known after apply)
+        }
+    }
+
+[1m  # openstack_compute_keypair_v2.vm_key["req-006"][0m will be created
+[0m  [32m+[0m[0m resource "openstack_compute_keypair_v2" "vm_key" {
+      [32m+[0m[0m fingerprint = (known after apply)
+      [32m+[0m[0m id          = (known after apply)
+      [32m+[0m[0m name        = "hackathon-key-req-006"
+      [32m+[0m[0m private_key = (sensitive value)
+      [32m+[0m[0m public_key  = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIB5L42uYQFLsQ6Y814HeXTpv9dvcCkmH0wklshWe+g+9 alex@DELL-ALEX"
+      [32m+[0m[0m region      = (known after apply)
+      [32m+[0m[0m user_id     = (known after apply)
+    }
+
+[1m  # openstack_networking_floatingip_v2.vm_fip["req-006"][0m will be created
+[0m  [32m+[0m[0m resource "openstack_networking_floatingip_v2" "vm_fip" {
+      [32m+[0m[0m address    = (known after apply)
+      [32m+[0m[0m all_tags   = (known after apply)
+      [32m+[0m[0m dns_domain = (known after apply)
+      [32m+[0m[0m dns_name   = (known after apply)
+      [32m+[0m[0m fixed_ip   = (known after apply)
+      [32m+[0m[0m id         = (known after apply)
+      [32m+[0m[0m pool       = "ext-floating1"
+      [32m+[0m[0m port_id    = (known after apply)
+      [32m+[0m[0m region     = (known after apply)
+      [32m+[0m[0m subnet_id  = (known after apply)
+      [32m+[0m[0m tenant_id  = (known after apply)
+    }
+
+[1m  # openstack_networking_network_v2.group_net["groupe1"][0m will be created
+[0m  [32m+[0m[0m resource "openstack_networking_network_v2" "group_net" {
+      [32m+[0m[0m admin_state_up          = true
+      [32m+[0m[0m all_tags                = (known after apply)
+      [32m+[0m[0m availability_zone_hints = (known after apply)
+      [32m+[0m[0m dns_domain              = (known after apply)
+      [32m+[0m[0m external                = (known after apply)
+      [32m+[0m[0m id                      = (known after apply)
+      [32m+[0m[0m mtu                     = (known after apply)
+      [32m+[0m[0m name                    = "hackathon-groupe1"
+      [32m+[0m[0m port_security_enabled   = (known after apply)
+      [32m+[0m[0m qos_policy_id           = (known after apply)
+      [32m+[0m[0m region                  = (known after apply)
+      [32m+[0m[0m shared                  = (known after apply)
+      [32m+[0m[0m tenant_id               = (known after apply)
+      [32m+[0m[0m transparent_vlan        = (known after apply)
+
+      [32m+[0m[0m segments (known after apply)
+    }
+
+[1m  # openstack_networking_port_v2.vm_port["req-006"][0m will be created
+[0m  [32m+[0m[0m resource "openstack_networking_port_v2" "vm_port" {
+      [32m+[0m[0m admin_state_up         = true
+      [32m+[0m[0m all_fixed_ips          = (known after apply)
+      [32m+[0m[0m all_security_group_ids = (known after apply)
+      [32m+[0m[0m all_tags               = (known after apply)
+      [32m+[0m[0m device_id              = (known after apply)
+      [32m+[0m[0m device_owner           = (known after apply)
+      [32m+[0m[0m dns_assignment         = (known after apply)
+      [32m+[0m[0m dns_name               = (known after apply)
+      [32m+[0m[0m id                     = (known after apply)
+      [32m+[0m[0m mac_address            = (known after apply)
+      [32m+[0m[0m name                   = "hackathon-port-req-006"
+      [32m+[0m[0m network_id             = (known after apply)
+      [32m+[0m[0m port_security_enabled  = (known after apply)
+      [32m+[0m[0m qos_policy_id          = (known after apply)
+      [32m+[0m[0m region                 = (known after apply)
+      [32m+[0m[0m security_group_ids     = (known after apply)
+      [32m+[0m[0m tenant_id              = (known after apply)
+
+      [32m+[0m[0m binding (known after apply)
+
+      [32m+[0m[0m fixed_ip {
+          [32m+[0m[0m subnet_id = (known after apply)
+        }
+    }
+
+[1m  # openstack_networking_router_interface_v2.group_router_iface["groupe1"][0m will be created
+[0m  [32m+[0m[0m resource "openstack_networking_router_interface_v2" "group_router_iface" {
+      [32m+[0m[0m force_destroy = false
+      [32m+[0m[0m id            = (known after apply)
+      [32m+[0m[0m port_id       = (known after apply)
+      [32m+[0m[0m region        = (known after apply)
+      [32m+[0m[0m router_id     = (known after apply)
+      [32m+[0m[0m subnet_id     = (known after apply)
+    }
+
+[1m  # openstack_networking_router_v2.group_router["groupe1"][0m will be created
+[0m  [32m+[0m[0m resource "openstack_networking_router_v2" "group_router" {
+      [32m+[0m[0m admin_state_up          = true
+      [32m+[0m[0m all_tags                = (known after apply)
+      [32m+[0m[0m availability_zone_hints = (known after apply)
+      [32m+[0m[0m distributed             = (known after apply)
+      [32m+[0m[0m enable_snat             = (known after apply)
+      [32m+[0m[0m external_network_id     = "0f9c3806-bd21-490f-918d-4a6d1c648489"
+      [32m+[0m[0m external_qos_policy_id  = (known after apply)
+      [32m+[0m[0m id                      = (known after apply)
+      [32m+[0m[0m name                    = "hackathon-groupe1-router"
+      [32m+[0m[0m region                  = (known after apply)
+      [32m+[0m[0m tenant_id               = (known after apply)
+
+      [32m+[0m[0m external_fixed_ip (known after apply)
+    }
+
+[1m  # openstack_networking_secgroup_rule_v2.icmp_in["groupe1"][0m will be created
+[0m  [32m+[0m[0m resource "openstack_networking_secgroup_rule_v2" "icmp_in" {
+      [32m+[0m[0m direction               = "ingress"
+      [32m+[0m[0m ethertype               = "IPv4"
+      [32m+[0m[0m id                      = (known after apply)
+      [32m+[0m[0m protocol                = "icmp"
+      [32m+[0m[0m region                  = (known after apply)
+      [32m+[0m[0m remote_address_group_id = (known after apply)
+      [32m+[0m[0m remote_group_id         = (known after apply)
+      [32m+[0m[0m remote_ip_prefix        = "0.0.0.0/0"
+      [32m+[0m[0m security_group_id       = (known after apply)
+      [32m+[0m[0m tenant_id               = (known after apply)
+    }
+
+[1m  # openstack_networking_secgroup_rule_v2.ssh_in["groupe1"][0m will be created
+[0m  [32m+[0m[0m resource "openstack_networking_secgroup_rule_v2" "ssh_in" {
+      [32m+[0m[0m direction               = "ingress"
+      [32m+[0m[0m ethertype               = "IPv4"
+      [32m+[0m[0m id                      = (known after apply)
+      [32m+[0m[0m port_range_max          = 22
+      [32m+[0m[0m port_range_min          = 22
+      [32m+[0m[0m protocol                = "tcp"
+      [32m+[0m[0m region                  = (known after apply)
+      [32m+[0m[0m remote_address_group_id = (known after apply)
+      [32m+[0m[0m remote_group_id         = (known after apply)
+      [32m+[0m[0m remote_ip_prefix        = "0.0.0.0/0"
+      [32m+[0m[0m security_group_id       = (known after apply)
+      [32m+[0m[0m tenant_id               = (known after apply)
+    }
+
+[1m  # openstack_networking_secgroup_v2.group_sg["groupe1"][0m will be created
+[0m  [32m+[0m[0m resource "openstack_networking_secgroup_v2" "group_sg" {
+      [32m+[0m[0m all_tags    = (known after apply)
+      [32m+[0m[0m description = "Security group hackathon groupe groupe1"
+      [32m+[0m[0m id          = (known after apply)
+      [32m+[0m[0m name        = "hackathon-groupe1-sg"
+      [32m+[0m[0m region      = (known after apply)
+      [32m+[0m[0m stateful    = (known after apply)
+      [32m+[0m[0m tenant_id   = (known after apply)
+    }
+
+[1m  # openstack_networking_subnet_v2.group_subnet["groupe1"][0m will be created
+[0m  [32m+[0m[0m resource "openstack_networking_subnet_v2" "group_subnet" {
+      [32m+[0m[0m all_tags          = (known after apply)
+      [32m+[0m[0m cidr              = "10.10.0.0/24"
+      [32m+[0m[0m dns_nameservers   = [
+          [32m+[0m[0m "1.1.1.1",
+          [32m+[0m[0m "8.8.8.8",
+        ]
+      [32m+[0m[0m enable_dhcp       = true
+      [32m+[0m[0m gateway_ip        = (known after apply)
+      [32m+[0m[0m id                = (known after apply)
+      [32m+[0m[0m ip_version        = 4
+      [32m+[0m[0m ipv6_address_mode = (known after apply)
+      [32m+[0m[0m ipv6_ra_mode      = (known after apply)
+      [32m+[0m[0m name              = "hackathon-groupe1-subnet"
+      [32m+[0m[0m network_id        = (known after apply)
+      [32m+[0m[0m no_gateway        = false
+      [32m+[0m[0m region            = (known after apply)
+      [32m+[0m[0m service_types     = (known after apply)
+      [32m+[0m[0m tenant_id         = (known after apply)
+
+      [32m+[0m[0m allocation_pool (known after apply)
+    }
+
+[1mPlan:[0m 11 to add, 0 to change, 0 to destroy.
+[0m
+Changes to Outputs:
+  [33m~[0m[0m vms = {
+      [32m+[0m[0m req-006 = {
+          [32m+[0m[0m end_date    = "2026-07-01"
+          [32m+[0m[0m floating_ip = (known after apply)
+          [32m+[0m[0m group       = "groupe1"
+          [32m+[0m[0m name        = "vm-req-006"
+          [32m+[0m[0m owner       = "toto"
+          [32m+[0m[0m template    = "ubuntu-dev"
+        }
+        [90m# (2 unchanged attributes hidden)[0m[0m
+    }
+[0m[1mopenstack_networking_secgroup_v2.group_sg["groupe1"]: Creating...[0m[0m
+[0m[1mopenstack_networking_network_v2.group_net["groupe1"]: Creating...[0m[0m
+[0m[1mopenstack_networking_router_v2.group_router["groupe1"]: Creating...[0m[0m
+[0m[1mopenstack_compute_keypair_v2.vm_key["req-006"]: Creating...[0m[0m
+[0m[1mopenstack_networking_network_v2.group_net["groupe1"]: Creation complete after 2s [id=5dc29895-a21b-4f19-b949-e0d5e65b7add][0m
+[0m[1mopenstack_networking_subnet_v2.group_subnet["groupe1"]: Creating...[0m[0m
+[0m[1mopenstack_networking_subnet_v2.group_subnet["groupe1"]: Creation complete after 1s [id=6f7ffde3-5cc8-40aa-a5c9-14030cefdbb4][0m
+[0m[1mopenstack_compute_keypair_v2.vm_key["req-006"]: Creation complete after 3s [id=hackathon-key-req-006][0m
+[0m[1mopenstack_networking_secgroup_v2.group_sg["groupe1"]: Creation complete after 4s [id=78f10d9e-4ce6-4f9f-af86-3a74dc1b6bcf][0m
+[0m[1mopenstack_networking_secgroup_rule_v2.ssh_in["groupe1"]: Creating...[0m[0m
+[0m[1mopenstack_networking_port_v2.vm_port["req-006"]: Creating...[0m[0m
+[0m[1mopenstack_networking_secgroup_rule_v2.icmp_in["groupe1"]: Creating...[0m[0m
+[0m[1mopenstack_networking_secgroup_rule_v2.icmp_in["groupe1"]: Creation complete after 0s [id=3c17a7b9-0a76-46ac-93e6-ce326f03e3cd][0m
+[0m[1mopenstack_networking_port_v2.vm_port["req-006"]: Creation complete after 0s [id=eab7797d-8595-4e9d-82d8-0cb811e7af84][0m
+[0m[1mopenstack_compute_instance_v2.vm["req-006"]: Creating...[0m[0m
+[0m[1mopenstack_networking_secgroup_rule_v2.ssh_in["groupe1"]: Creation complete after 0s [id=2e585f83-0921-4f39-ad1a-2a779fc6ea23][0m
+[0m[1mopenstack_networking_router_v2.group_router["groupe1"]: Creation complete after 5s [id=01296b3e-2563-46ea-ac91-70b8132f8294][0m
+[0m[1mopenstack_networking_router_interface_v2.group_router_iface["groupe1"]: Creating...[0m[0m
+[0m[1mopenstack_networking_router_interface_v2.group_router_iface["groupe1"]: Creation complete after 1s [id=fea0002d-807f-4b01-8ecf-a24116069bec][0m
+[0m[1mopenstack_networking_floatingip_v2.vm_fip["req-006"]: Creating...[0m[0m
+[0m[1mopenstack_networking_floatingip_v2.vm_fip["req-006"]: Creation complete after 1s [id=cf8779c4-039e-483b-9f74-6a3753de9139][0m
+[0m[1mopenstack_compute_instance_v2.vm["req-006"]: Still creating... [10s elapsed][0m[0m
+[0m[1mopenstack_compute_instance_v2.vm["req-006"]: Still creating... [20s elapsed][0m[0m
+[0m[1mopenstack_compute_instance_v2.vm["req-006"]: Still creating... [30s elapsed][0m[0m
+[0m[1mopenstack_compute_instance_v2.vm["req-006"]: Creation complete after 32s [id=bad5221f-537a-4d9b-bbd0-df54221ca858][0m
+[0m[1m[32m
+Apply complete! Resources: 11 added, 0 changed, 0 destroyed.
+[0m[0m[1m[32m
+Outputs:
+
+[0mvms = {
+  "req-001" = {
+    "end_date" = "2026-07-10"
+    "floating_ip" = "84.234.25.105"
+    "group" = "groupe-a"
+    "name" = "vm-req-001"
+    "owner" = "alice"
+    "template" = "ubuntu-dev"
+  }
+  "req-002" = {
+    "end_date" = "2026-07-10"
+    "floating_ip" = "195.15.244.246"
+    "group" = "groupe-b"
+    "name" = "vm-req-002"
+    "owner" = "bob"
+    "template" = "ubuntu-dev"
+  }
+  "req-006" = {
+    "end_date" = "2026-07-01"
+    "floating_ip" = "195.15.245.255"
+    "group" = "groupe1"
+    "name" = "vm-req-006"
+    "owner" = "toto"
+    "template" = "ubuntu-dev"
+  }
+}
+==> VM req-006 provisionnee. Connexion : ssh student@<floating-ip>
+==> req-006 provisionnee automatiquement.

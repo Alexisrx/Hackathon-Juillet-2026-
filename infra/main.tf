@@ -11,7 +11,12 @@ terraform {
 provider "openstack" {}
 
 locals {
-  groups = toset([for k, v in var.vms : v.group])
+  groups_list = sort(tolist(toset([for k, v in var.vms : v.group])))
+  groups      = toset(local.groups_list)
+  group_cidrs = {
+    for idx, g in local.groups_list :
+    g => "192.168.${(idx + 1) * 10}.0/24"
+  }
 }
 
 resource "openstack_networking_network_v2" "group_net" {
@@ -24,7 +29,7 @@ resource "openstack_networking_subnet_v2" "group_subnet" {
   for_each        = local.groups
   name            = "hackathon-${each.key}-subnet"
   network_id      = openstack_networking_network_v2.group_net[each.key].id
-  cidr            = "10.10.0.0/24"
+  cidr            = local.group_cidrs[each.key]
   ip_version      = 4
   dns_nameservers = ["1.1.1.1", "8.8.8.8"]
 }
@@ -74,8 +79,6 @@ resource "openstack_compute_keypair_v2" "vm_key" {
   public_key = each.value.ssh_public_key
 }
 
-# Port reseau explicite : cree avant la VM et la floating IP,
-# ce qui garantit que l'association floating IP -> port -> VM est complete.
 resource "openstack_networking_port_v2" "vm_port" {
   for_each           = var.vms
   name               = "hackathon-port-${each.key}"
@@ -123,10 +126,9 @@ resource "openstack_compute_instance_v2" "vm" {
     CLOUD_INIT
 }
 
-# Floating IP associee au port explicite -> association garantie
 resource "openstack_networking_floatingip_v2" "vm_fip" {
+  for_each   = var.vms
+  pool       = var.floating_ip_pool
+  port_id    = openstack_networking_port_v2.vm_port[each.key].id
   depends_on = [openstack_networking_router_interface_v2.group_router_iface]
-  for_each = var.vms
-  pool     = var.floating_ip_pool
-  port_id  = openstack_networking_port_v2.vm_port[each.key].id
 }

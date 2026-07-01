@@ -7,6 +7,7 @@
 set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 INFRA_DIR="$SCRIPT_DIR/../infra"
+[[ -f "$INFRA_DIR/openrc-auto.sh" ]] && source "$INFRA_DIR/openrc-auto.sh"
 
 read -p "Ceci va detruire TOUTES les VMs actives et effacer requests/ + le journal. Continuer ? [y/N] " confirm
 if [[ "$confirm" != "y" && "$confirm" != "Y" ]]; then

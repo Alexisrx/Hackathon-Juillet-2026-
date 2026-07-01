@@ -1,10 +1,10 @@
 {
   "id": "req-001",
   "owner": "alice",
-  "group": "groupe-a",
+  "group": "groupe-b",
   "template": "ubuntu-dev",
   "start_date": "2026-07-01",
   "end_date": "2026-07-10",
-  "ssh_public_key": "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIB5L42uYQFLsQ6Y814HeXTpv9dvcCkmH0wklshWe+g+9 alex@DELL-ALEX",
+  "ssh_public_key": "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIGKCJTYOyd0KJNHntCGy9k03LUO/vy7iQ1kmqDdkSBRV ubuntu@vm-platform",
   "status": "provisioned"
 }
